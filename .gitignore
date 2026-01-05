@@ -1,0 +1,13 @@
+# Ignore sensitive files
+config/db.php
+uploads/*
+*.log
+
+# Ignore common files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Ignore vendor or generated files if any
+vendor/
+node_modules/
