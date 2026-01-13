@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Jakarta');
 include '../config/db.php';
 
 // pastikan role karyawan
@@ -10,7 +11,7 @@ if (!isset($_SESSION['id']) || $_SESSION['role'] != 'karyawan') {
 
 $user_id = $_SESSION['id'];
 $tanggal = date('Y-m-d');
-$jam     = date('H:i:s');
+$jam = date('H:i:s');
 
 // ambil id karyawan
 $q = mysqli_query($conn, "SELECT id FROM karyawan WHERE user_id='$user_id'");
@@ -26,22 +27,45 @@ $data = mysqli_fetch_assoc($cek);
 
 // ABSEN MASUK
 if (isset($_POST['masuk'])) {
+    $shift = $_POST['shift'];
+
     mysqli_query($conn, "
-        INSERT INTO absensi (karyawan_id, tanggal, jam_masuk)
-        VALUES ('$karyawan_id', '$tanggal', '$jam')
+        INSERT INTO absensi (karyawan_id, tanggal, jam_masuk, shift)
+        VALUES ('$karyawan_id', '$tanggal', '$jam', '$shift')
     ");
     header("Location: absensi.php");
 }
 
+
 // ABSEN PULANG
 if (isset($_POST['pulang'])) {
+
+    $lembur_mulai = $_POST['lembur_mulai'] ?? null;
+    $lembur_selesai = $_POST['lembur_selesai'] ?? null;
+    $total_lembur = 0;
+
+    if ($lembur_mulai && $lembur_selesai) {
+        $mulai = strtotime($lembur_mulai);
+        $selesai = strtotime($lembur_selesai);
+
+        if ($selesai > $mulai) {
+            $total_lembur = round(($selesai - $mulai) / 3600);
+        }
+    }
+
     mysqli_query($conn, "
         UPDATE absensi
-        SET jam_pulang='$jam'
+        SET 
+            jam_pulang='$jam',
+            jam_lembur_mulai='$lembur_mulai',
+            jam_lembur_selesai='$lembur_selesai',
+            total_lembur='$total_lembur'
         WHERE karyawan_id='$karyawan_id' AND tanggal='$tanggal'
     ");
+
     header("Location: absensi.php");
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -60,6 +84,7 @@ if (isset($_POST['pulang'])) {
             align-items: center;
             justify-content: center;
         }
+
         .absensi-container {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
@@ -69,44 +94,51 @@ if (isset($_POST['pulang'])) {
             width: 100%;
             text-align: center;
         }
+
         .logo {
             margin-bottom: 20px;
         }
+
         .logo img {
             max-width: 100px;
             height: auto;
         }
+
         h2 {
             color: #FF69B4;
             margin-bottom: 20px;
             font-weight: bold;
         }
+
         p {
             color: #666;
             margin-bottom: 20px;
         }
+
         .btn-custom {
             background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
             border: none;
             border-radius: 10px;
-            padding: 15px 30px;
+            padding: 10px 20px;
             color: white;
             font-weight: bold;
-            font-size: 16px;
-            margin: 10px;
             transition: transform 0.2s;
         }
+
         .btn-custom:hover {
             transform: translateY(-2px);
             background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
             color: white;
         }
+
         .btn-secondary-custom {
             background: #6c757d;
         }
+
         .btn-secondary-custom:hover {
             background: #5a6268;
         }
+
         .alert {
             background: #d4edda;
             color: #155724;
@@ -121,33 +153,80 @@ if (isset($_POST['pulang'])) {
 <body>
     <div class="absensi-container">
         <div class="logo">
-            <img src="https://ik.imagekit.io/ferdyawans/LogoR.png" alt="Logo Absensi" onerror="this.style.display='none';">
+            <img src="https://ik.imagekit.io/ferdyawans/LogoR.png" alt="Logo Absensi"
+                onerror="this.style.display='none';">
         </div>
-        <h2>Absensi Karyawan</h2>
-        <p>Tanggal: <strong><?= $tanggal ?></strong></p>
 
+        <h2>Absensi Karyawan</h2>
+        <p>Tanggal: <strong id="current-date-time"></strong></p>
         <?php if (!$data) { ?>
+            <!-- ABSEN MASUK -->
             <form method="POST">
+
+                <label>Shift</label>
+                <select name="shift" class="form-control mb-3" required>
+                    <option value="">-- Pilih Shift --</option>
+                    <option value="Shift 1">Shift 1</option>
+                    <option value="Shift 2">Shift 2</option>
+                    <option value="Overtime">Overtime</option>
+                </select>
+
                 <button name="masuk" class="btn-custom">Absen Masuk</button>
             </form>
+
         <?php } elseif ($data && !$data['jam_pulang']) { ?>
+            <!-- ABSEN PULANG -->
             <div class="alert">
-                <p>Jam Masuk: <strong><?= $data['jam_masuk'] ?></strong></p>
+                <p>Jam Masuk: <strong><?= date('H:i:s', strtotime($data['jam_masuk'])) ?></strong></p>
+                <p>Shift: <strong><?= $data['shift'] ?></strong></p>
             </div>
+
             <form method="POST">
+                <label>Lembur Dari (Opsional)</label>
+                <input type="time" name="lembur_mulai" class="form-control mb-2">
+
+                <label>Lembur Sampai (Opsional)</label>
+                <input type="time" name="lembur_selesai" class="form-control mb-3">
+
                 <button name="pulang" class="btn-custom">Absen Pulang</button>
             </form>
+
         <?php } else { ?>
+            <!-- ABSENSI SELESAI -->
             <div class="alert">
                 <p>Jam Masuk: <strong><?= $data['jam_masuk'] ?></strong></p>
                 <p>Jam Pulang: <strong><?= $data['jam_pulang'] ?></strong></p>
+                <p>Shift: <strong><?= $data['shift'] ?></strong></p>
                 <p><b>Absensi hari ini sudah lengkap</b></p>
             </div>
-            <a href="dashboard.php" class="btn btn-secondary-custom">Kembali ke Dashboard</a>
         <?php } ?>
+        <div class="text-center mt-4">
+        <a href="dashboard.php" class="btn btn-custom">Kembali ke Dashboard</a>
+        </div>
     </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function updateDateTime() {
+            const now = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            const formattedDateTime = now.toLocaleDateString('id-ID', options);
+            document.getElementById('current-date-time').textContent = formattedDateTime;
+        }
+
+        // Update immediately and then every second
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    </script>
 </body>
 
 </html>
-
