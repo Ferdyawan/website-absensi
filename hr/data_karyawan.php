@@ -50,9 +50,11 @@ $cabang = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM cabang WHERE id=
             background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
             border: none;
             border-radius: 10px;
-            padding: 10px 20px;
+            padding: 15px 30px;
             color: white;
             font-weight: bold;
+            font-size: 16px;
+            margin: 10px;
             transition: transform 0.2s;
         }
         .btn-custom:hover {

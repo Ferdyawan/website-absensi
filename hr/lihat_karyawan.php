@@ -13,16 +13,11 @@ $cabang = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM cabang WHERE id=
 
 // Ambil data karyawan berdasarkan cabang
 $data = mysqli_query($conn, "
-    SELECT
-        users.id AS user_id,
-        users.nama,
-        users.email,
-        karyawan.nip,
-        karyawan.jabatan,
-        karyawan.alamat
+    SELECT users.nama, users.email, karyawan.nip, karyawan.jabatan,
+           (SELECT nama_cabang FROM cabang WHERE id = karyawan.cabang_id) as nama_cabang
     FROM karyawan
     JOIN users ON users.id = karyawan.user_id
-    WHERE karyawan.cabang_id = '$cabang_id'
+    WHERE karyawan.cabang_id='$cabang_id'
 ");
 ?>
 <!DOCTYPE html>
@@ -39,11 +34,13 @@ $data = mysqli_query($conn, "
             font-family: 'Arial', sans-serif;
             min-height: 100vh;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
+
         .card {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
@@ -51,15 +48,18 @@ $data = mysqli_query($conn, "
             padding: 20px;
             margin-bottom: 20px;
         }
+
         .logo img {
             max-width: 100px;
             height: auto;
         }
+
         h2 {
             color: #FF69B4;
             text-align: center;
             margin-bottom: 20px;
         }
+
         .employee-card {
             background: white;
             border-radius: 10px;
@@ -67,6 +67,7 @@ $data = mysqli_query($conn, "
             margin-bottom: 15px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+
         .btn-custom {
             background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
             border: none;
@@ -76,6 +77,7 @@ $data = mysqli_query($conn, "
             font-weight: bold;
             transition: transform 0.2s;
         }
+
         .btn-custom:hover {
             transform: translateY(-2px);
             background: linear-gradient(135deg, #FF1493 0%, #FF69B4 100%);
@@ -88,7 +90,8 @@ $data = mysqli_query($conn, "
     <div class="container">
         <div class="card">
             <div class="text-center mb-4 logo">
-                <img src="https://ik.imagekit.io/ferdyawans/LogoR.png" alt="Logo Absensi" onerror="this.style.display='none';">
+                <img src="https://ik.imagekit.io/ferdyawans/LogoR.png" alt="Logo Absensi"
+                    onerror="this.style.display='none';">
             </div>
             <h2>Lihat Data Karyawan - <?= $cabang['nama_cabang'] ?></h2>
             <?php while ($d = mysqli_fetch_assoc($data)) { ?>
@@ -97,7 +100,7 @@ $data = mysqli_query($conn, "
                     <p><strong>Email:</strong> <?= $d['email'] ?></p>
                     <p><strong>NIP:</strong> <?= $d['nip'] ?></p>
                     <p><strong>Jabatan:</strong> <?= $d['jabatan'] ?></p>
-                    <p><strong>Alamat:</strong> <?= $d['alamat'] ?></p>
+                    <p><strong>Cabang:</strong> <?= $d['nama_cabang'] ?></p>
                 </div>
             <?php } ?>
             <div class="text-center mt-3">

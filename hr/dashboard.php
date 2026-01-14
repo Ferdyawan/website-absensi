@@ -113,7 +113,7 @@ if (isset($_POST['tambah'])) {
     $email = $_POST['email'];
     $nip = $_POST['nip'];
     $jabatan = $_POST['jabatan'];
-    $alamat = $_POST['alamat'];
+    $cabang_id = $_POST['cabang_id'];
 
     // password default karyawan
     $password = password_hash('123456', PASSWORD_DEFAULT);
@@ -129,8 +129,8 @@ if (isset($_POST['tambah'])) {
 
     // 3. insert ke tabel karyawan
     mysqli_query($conn, "
-        INSERT INTO karyawan (user_id, nip, jabatan, alamat, cabang_id)
-        VALUES ('$user_id', '$nip', '$jabatan', '$alamat', '$cabang_id')
+        INSERT INTO karyawan (user_id, nip, jabatan, cabang_id)
+        VALUES ('$user_id', '$nip', '$jabatan', '$cabang_id')
     ");
 }
 
@@ -142,10 +142,14 @@ $data = mysqli_query($conn, "
         users.email,
         karyawan.nip,
         karyawan.jabatan,
-        karyawan.alamat
+        cabang.nama_cabang
     FROM karyawan
     JOIN users ON users.id = karyawan.user_id
+    JOIN cabang ON karyawan.cabang_id = cabang.id
 ");
+
+// Ambil data cabang untuk dropdown
+$cabang_options = mysqli_query($conn, "SELECT * FROM cabang");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -251,7 +255,12 @@ $data = mysqli_query($conn, "
                     <input name="jabatan" class="form-control" placeholder="Jabatan" required>
                 </div>
                 <div class="col-md-4">
-                    <textarea name="alamat" class="form-control" placeholder="Alamat"></textarea>
+                    <select name="cabang_id" class="form-control" required>
+                        <option value="">-- Pilih Cabang --</option>
+                        <?php while ($c = mysqli_fetch_assoc($cabang_options)) { ?>
+                            <option value="<?= $c['id'] ?>"><?= $c['nama_cabang'] ?></option>
+                        <?php } ?>
+                    </select>
                 </div>
             </div>
             <button name="tambah" class="btn btn-primary mt-2">Tambah</button>
@@ -264,7 +273,7 @@ $data = mysqli_query($conn, "
                     <th>Email</th>
                     <th>NIP</th>
                     <th>Jabatan</th>
-                    <th>Alamat</th>
+                    <th>Cabang</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -275,7 +284,7 @@ $data = mysqli_query($conn, "
                         <td><?= $d['email'] ?></td>
                         <td><?= $d['nip'] ?></td>
                         <td><?= $d['jabatan'] ?></td>
-                        <td><?= $d['alamat'] ?></td>
+                        <td><?= $d['nama_cabang'] ?></td>
                         <td>
                             <a href="hapus_karyawan.php?id=<?= $d['user_id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus karyawan ini?')">Hapus</a>
                             <a href="edit_karyawan.php?id=<?= $d['user_id'] ?>" class="btn btn-warning btn-sm">Edit</a>

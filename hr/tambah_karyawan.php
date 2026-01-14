@@ -17,7 +17,7 @@ if (isset($_POST['tambah'])) {
     $email = $_POST['email'];
     $nip = $_POST['nip'];
     $jabatan = $_POST['jabatan'];
-    $alamat = $_POST['alamat'];
+    $cabang_id = $_POST['cabang_id'];
 
     // password default karyawan
     $password = password_hash('123456', PASSWORD_DEFAULT);
@@ -33,8 +33,8 @@ if (isset($_POST['tambah'])) {
 
     // 3. insert ke tabel karyawan
     mysqli_query($conn, "
-        INSERT INTO karyawan (user_id, nip, jabatan, alamat, cabang_id)
-        VALUES ('$user_id', '$nip', '$jabatan', '$alamat', '$cabang_id')
+        INSERT INTO karyawan (user_id, nip, jabatan, cabang_id)
+        VALUES ('$user_id', '$nip', '$jabatan', '$cabang_id')
     ");
 
     header("Location: data_karyawan.php");
@@ -129,10 +129,26 @@ if (isset($_POST['tambah'])) {
                     <input name="nip" class="form-control mb-3" placeholder="NIP" required>
                 </div>
                 <div class="col-md-4">
-                    <input name="jabatan" class="form-control mb-3" placeholder="Jabatan" required>
+                    <select name="jabatan" class="form-control mb-3" required>
+                        <option value="">-- Pilih Jabatan --</option>
+                        <option value="Kepala Toko">Kepala Toko</option>
+                        <option value="Merchandiser">Merchandiser</option>
+                        <option value="Admin (Konten+Olshop)">Admin (Konten+Olshop)</option>
+                        <option value="Kasir Utama">Kasir Utama</option>
+                        <option value="Kasir Backup">Kasir Backup</option>
+                        <option value="Security">Security</option>
+                    </select>
                 </div>
                 <div class="col-md-4">
-                    <textarea name="alamat" class="form-control mb-3" placeholder="Alamat"></textarea>
+                    <select name="cabang_id" class="form-control mb-3" required>
+                        <option value="">-- Pilih Cabang --</option>
+                        <?php 
+                        $cabang_options = mysqli_query($conn, "SELECT * FROM cabang");
+                        while ($c = mysqli_fetch_assoc($cabang_options)) { 
+                        ?>
+                            <option value="<?= $c['id'] ?>"><?= htmlspecialchars($c['nama_cabang']) ?></option>
+                        <?php } ?>
+                    </select>
                 </div>
             </div>
             <div class="text-center">

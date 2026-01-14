@@ -27,6 +27,18 @@ $data = mysqli_query($conn, "
     AND karyawan.cabang_id = '$cabang_id'
     ORDER BY absensi.jam_masuk DESC
 ");
+
+// Ambil data ketidakhadiran untuk cabang ini
+$data_ketidakhadiran = mysqli_query($conn, "
+    SELECT ketidakhadiran.*, users.nama, karyawan.nip
+    FROM ketidakhadiran
+    JOIN karyawan ON ketidakhadiran.karyawan_id = karyawan.id
+    JOIN users ON users.id = karyawan.user_id
+    WHERE karyawan.cabang_id = '$cabang_id'
+    AND ketidakhadiran.tanggal_mulai <= '$tanggal_hari_ini'
+    AND ketidakhadiran.tanggal_selesai >= '$tanggal_hari_ini'
+    ORDER BY ketidakhadiran.created_at DESC
+");
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,6 +113,18 @@ $data = mysqli_query($conn, "
             font-size: 14px;
             margin-bottom: 10px;
         }
+        .status-pending {
+            color: orange;
+            font-weight: bold;
+        }
+        .status-approved {
+            color: green;
+            font-weight: bold;
+        }
+        .status-rejected {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -147,11 +171,55 @@ $data = mysqli_query($conn, "
                     <?php } ?>
                 </tbody>
             </table>
-            <div class="text-center mt-3">
-                <button onclick="refreshData()" class="btn btn-custom me-2">Refresh Sekarang</button>
-                <a href="branch_dashboard.php" class="btn btn-custom">Kembali ke Dashboard</a>
+            
+        </div>
+        <div class="card mt-4">
+                <h2 class="mb-0">Laporan Ketidakhadiran</h2>
+            <div class="card-body table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>NIP</th>
+                            <th>Jenis</th>
+                            <th>Tanggal</th>
+                            <th>Status</th>
+                            <th>Alasan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($d = mysqli_fetch_assoc($data_ketidakhadiran)) { ?>
+                            <tr>
+                                <td><?= $d['nama'] ?></td>
+                                <td><?= $d['nip'] ?></td>
+                                <td><?php echo ucfirst($d['jenis']); ?></td>
+                                <td><?php echo $d['tanggal_mulai'] . ' - ' . $d['tanggal_selesai']; ?></td>
+                                <td class="status-<?php echo $d['status']; ?>"><?php echo ucfirst($d['status']); ?></td>
+                                <td><?php echo $d['alasan']; ?></td>
+                                <td>
+                                    <?php if ($d['jenis'] == 'cuti' && $d['status'] == 'pending') { ?>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="id" value="<?= $d['id'] ?>">
+                                            <button type="submit" name="approve" class="btn btn-success btn-sm">Approve</button>
+                                            <button type="submit" name="reject" class="btn btn-danger btn-sm">Reject</button>
+                                        </form>
+                                    <?php } ?>
+                                    <?php if ($d['file_surat']) { ?>
+                                        <a href="<?= $d['file_surat'] ?>" target="_blank" class="btn btn-info btn-sm">Lihat
+                                            Surat</a>
+                                    <?php } ?>
+                                </td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
+    <div class="text-center mt-3 mb-3">
+                <button onclick="refreshData()" class="btn btn-custom me-2 mb-2">Refresh Sekarang</button>
+                <a href="branch_dashboard.php" class="btn btn-custom mb-2">Kembali ke Dashboard</a>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>

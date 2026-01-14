@@ -19,9 +19,10 @@ $data = mysqli_query($conn, "
         users.email,
         karyawan.nip,
         karyawan.jabatan,
-        karyawan.alamat
+        cabang.nama_cabang
     FROM karyawan
     JOIN users ON users.id = karyawan.user_id
+    JOIN cabang ON cabang.id = karyawan.cabang_id
     WHERE karyawan.cabang_id = '$cabang_id'
 ");
 ?>
@@ -108,7 +109,7 @@ $data = mysqli_query($conn, "
                             <th>Email</th>
                             <th>NIP</th>
                             <th>Jabatan</th>
-                            <th>Alamat</th>
+                            <th>Cabang</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -119,7 +120,7 @@ $data = mysqli_query($conn, "
                             <td><?= $d['email'] ?></td>
                             <td><?= $d['nip'] ?></td>
                             <td><?= $d['jabatan'] ?></td>
-                            <td><?= $d['alamat'] ?></td>
+                            <td><?= $d['nama_cabang'] ?></td>
                             <td>
                                 <a href="edit_karyawan.php?id=<?= $d['user_id'] ?>" class="btn btn-warning btn-sm">Edit</a>
                                 <a href="hapus_karyawan.php?id=<?= $d['user_id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus karyawan ini?')">Hapus</a>
